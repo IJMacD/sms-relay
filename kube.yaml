@@ -1,0 +1,42 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: sms-relay
+spec:
+  selector:
+    matchLabels:
+      app: sms-relay
+  template:
+    metadata:
+      labels:
+        app: sms-relay
+    spec:
+      nodeSelector:
+        kubernetes.io/arch: amd64
+      containers:
+      - name: sms-relay
+        image: ijmacd/sms_forwarder:1.0.0
+        # resources:
+        #   limits:
+        #     memory: "32Mi"
+        #     cpu: "50m"
+        env:
+         - name: APPRISE_URLS
+           value: pbul://o.cJi206qNjSg97ikyMz5eC5BY7jbdGOT4
+        ports:
+        - containerPort: 555
+          protocol: UDP
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: sms-relay
+spec:
+  selector:
+    app: sms-relay
+  type: LoadBalancer
+  ports:
+  - port: 555
+    targetPort: 555
+    protocol: UDP
+
