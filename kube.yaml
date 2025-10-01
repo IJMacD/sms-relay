@@ -1,0 +1,40 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: sms-relay
+spec:
+  selector:
+    matchLabels:
+      app: sms-relay
+  template:
+    metadata:
+      labels:
+        app: sms-relay
+    spec:
+      containers:
+      - name: sms-relay
+        image: registry.home.ijmacd.com/ijmacd/sms-relay:1.0.0
+        resources:
+          limits:
+            memory: "100Mi"
+            cpu: "50m"
+        envFrom:
+        - secretRef:
+            name: sms-relay-env
+        ports:
+        - containerPort: 555
+          protocol: UDP
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: sms-relay
+spec:
+  selector:
+    app: sms-relay
+  type: LoadBalancer
+  ports:
+  - port: 555
+    targetPort: 555
+    protocol: UDP
+
