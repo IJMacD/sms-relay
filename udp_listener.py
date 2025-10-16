@@ -51,22 +51,29 @@ with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as s:
 
         parts = re.split(r"sms =", string)
         if len(parts) == 2:
+            # Ignore message format part that starts with + on newline
             data = re.split(r"\n\+", parts[1])
 
-            try:
-                byte_data = bytes.fromhex(data[0])
+            msg = data[0].strip()
 
+            if re.match(r"[0-9A-F]+", msg):
                 if len(sms_parts) == 0:
                     timer = threading.Timer(10.0, assemble_parts)
                     timer.start()
 
+                if len(msg) % 2 == 1:
+                    # Message definitely has some corruption
+                    print(f"Corrupt message part found. Length={len(msg)}")
+                    msg = msg[:-1]
+
+                byte_data = bytes.fromhex(msg)
                 sms_parts.append(byte_data.decode())
-            except ValueError:
+            else:
                 print("---\nSMS Received:\n---")
-                print(data[0])
+                print(msg)
 
                 if apobj:
-                    apobj.notify(title="SMS Received", body=data[0])
+                    apobj.notify(title="SMS Received", body=msg)
 
         # Decode the received data and print the message and sender's address
         # print(f"Received from {address}: {string}", end="")

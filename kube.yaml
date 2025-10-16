@@ -13,7 +13,7 @@ spec:
     spec:
       containers:
       - name: sms-relay
-        image: registry.home.ijmacd.com/ijmacd/sms-relay:1.1.0
+        image: registry.home.ijmacd.com/ijmacd/sms-relay:1.1.1
         resources:
           limits:
             memory: "100Mi"

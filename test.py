@@ -1,17 +1,25 @@
+from datetime import datetime
 import re
 import sys
 import threading
 import time
 
-sms_parts = []
+# input_file = sys.stdin
+input_file = open("sample2.txt")
+
+sms_parts = ""
 
 def assemble_parts():
     global sms_parts
-    print("---\nSMS Received:\n---")
-    print("".join(sms_parts))
-    sms_parts = []
+    try:
+        print("---\nMulti SMS Received:\n---")
+        byte_string = bytes.fromhex(sms_parts)
+        print(byte_string.decode())
+        sms_parts = ""
+    except:
+        print(sms_parts)
 
-for line in sys.stdin:
+for line in input_file:
     line = line.replace("\\n", "\n")
 
     parts = re.split(r"sms =", line)
@@ -19,16 +27,22 @@ for line in sys.stdin:
 
         data = re.split(r"\n\+", parts[1])
 
-        try:
-            byte_data = bytes.fromhex(data[0])
+        msg = data[0].strip()
+
+        if re.match(r"[0-9A-F]+", msg):
+            if len(msg) % 2 == 1:
+                # msg = msg[:-1]
+                print("bad_part")
+                continue
 
             if len(sms_parts) == 0:
                 timer = threading.Timer(10.0, assemble_parts)
                 timer.start()
 
-            sms_parts.append(byte_data.decode())
-        except ValueError:
-            print("---\nSMS Received:\n---")
-            print(data[0])
+            sms_parts = sms_parts + msg
+
+        else:
+            print("---\nSingle SMS Received:\n---")
+            print(msg)
 
 time.sleep(20)
