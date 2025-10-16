@@ -2,6 +2,21 @@ import os
 import socket
 import re
 import apprise
+import threading
+
+sms_parts = []
+
+def assemble_parts():
+    global sms_parts, apobj
+    content = "".join(sms_parts)
+    sms_parts = []
+
+    print("---\nSMS Received:\n---")
+    print(content)
+
+    if apobj:
+        apobj.notify(title="SMS Received", body=content)
+
 
 # Define the host and port
 # '' means listening on all available network interfaces
@@ -36,12 +51,22 @@ with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as s:
 
         parts = re.split(r"sms =", string)
         if len(parts) == 2:
-            print("-----")
-            print("SMS Received:")
-            print("-----")
+            data = re.split(r"\n\+", parts[1])
 
-            if apobj:
-                apobj.notify(title="SMS Received", body=parts[1])
+            try:
+                byte_data = bytes.fromhex(data[0])
+
+                if len(sms_parts) == 0:
+                    timer = threading.Timer(10.0, assemble_parts)
+                    timer.start()
+
+                sms_parts.append(byte_data.decode())
+            except ValueError:
+                print("---\nSMS Received:\n---")
+                print(data[0])
+
+                if apobj:
+                    apobj.notify(title="SMS Received", body=data[0])
 
         # Decode the received data and print the message and sender's address
         # print(f"Received from {address}: {string}", end="")
